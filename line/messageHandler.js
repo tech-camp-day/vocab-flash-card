@@ -1,6 +1,7 @@
 const { reply } = require('./messageSender');
 const {
   createUser,
+  doesUserExist,
   deleteUser,
   assignRandomVocab,
   getCurrentVocab,
@@ -42,6 +43,11 @@ function handleUnfollow(event) {
 function handleMessage(event) {
   if (event.message.type !== 'text') {
     reply(event, 'ส่งสติ้กเกอร์มาเพื่อ?');
+  }
+
+  if (!doesUserExist(event.source.userId)) {
+    reply(event, 'มีข้อผิดพลาดในการเริ่มต้น กรุณาลอง block แล้ว unblock บอทใหม่อีกครั้ง');
+    return;
   }
 
   if (event.message.text === 'ขอศัพท์') {

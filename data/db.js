@@ -49,6 +49,11 @@ function createUser(lineUserId) {
   createUser.run(lineUserId);
 }
 
+function doesUserExist(lineUserId) {
+  const selectUser = db.prepare('select lineUserId from user where lineUserId = ?');
+  return selectUser.get(lineUserId);
+}
+
 function deleteUser(lineUserId) {
   const deleteUserHistory = db.prepare('delete from userHistory where lineUserId = ?');
   const deleteUser = db.prepare('delete from user where lineUserId = ?');
@@ -64,6 +69,7 @@ function assignRandomVocab(lineUserId) {
   const updateCurrentVocab = db.prepare('update user set currentVocabId = ?, currentAnswered = false, currentCorrect = false where lineUserId = ?');
 
   const randomVocab = selectRandomVocab.get();
+  console.log(randomVocab, null, 2);
   updateCurrentVocab.run(randomVocab.id, lineUserId);
 
   return randomVocab;
@@ -84,4 +90,4 @@ function addScore(lineUserId) {
   addScore.run(lineUserId);
 }
 
-module.exports = { initDb, createUser, deleteUser, assignRandomVocab, getCurrentVocab, logHistory, addScore };
+module.exports = { initDb, createUser, doesUserExist, deleteUser, assignRandomVocab, getCurrentVocab, logHistory, addScore };
