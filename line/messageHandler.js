@@ -68,4 +68,6 @@ function handleMessage(event) {
   reply(event, 'รอศัพท์ใหม่พรุ่งนี้นะครับ');
 }
 
+// todo: cron to assign new vocab everyday
+
 module.exports = { handleEvent };
