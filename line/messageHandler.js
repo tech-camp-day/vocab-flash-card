@@ -1,12 +1,12 @@
-const { reply } = require('./messageSender');
+const { reply, send } = require('./messageSender');
 const {
   createUser,
   doesUserExist,
   deleteUser,
   assignRandomVocab,
   getCurrentVocab,
-  addScore,
-  logHistory
+  correctAnswer,
+  wrongAnswer,
 } = require('../data/db');
 
 /**
@@ -53,6 +53,7 @@ function handleMessage(event) {
   if (event.message.text === 'ขอศัพท์') {
     const { word } = assignRandomVocab(event.source.userId);
     reply(event, `"${word}" แปลว่าอะไร?`);
+    return;
   }
 
   const currentVocab = getCurrentVocab(event.source.userId);
@@ -62,18 +63,20 @@ function handleMessage(event) {
     return;
   }
 
+  const { word, meaning } = currentVocab;
+
   if (event.message.text === meaning) {
     reply(event, 'ถูกต้องครับ');
-    addScore(event.source.userId, 1);
-    logHistory(event.source.userId, vocabId, true);
+    correctAnswer(event.source.userId);
   } else {
-    reply(event, `ผิดครับ ${word} แปลว่า "${meaning}"`);
-    logHistory(event.source.userId, vocabId, false);
+    reply(event, 'ผิดครับ', `${word} แปลว่า "${meaning}"`);
+    wrongAnswer(event.source.userId);
   }
 
-  reply(event, 'รอศัพท์ใหม่พรุ่งนี้นะครับ');
+  send(event, 'รอศัพท์ใหม่พรุ่งนี้นะครับ');
 }
 
 // todo: cron to assign new vocab everyday
+// todo: history check
 
 module.exports = { handleEvent };

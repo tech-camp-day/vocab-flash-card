@@ -76,18 +76,28 @@ function assignRandomVocab(lineUserId) {
 }
 
 function getCurrentVocab(lineUserId) {
-  const selectCurrentVocab = db.prepare('select id, word, meaning from vocabs where id = (select currentVocabId from user where lineUserId = ?)');
+  const selectCurrentVocab = db.prepare('select word, meaning from vocabs where id = (select currentVocabId from user where lineUserId = ? and currentAnswered = false)');
   return selectCurrentVocab.get(lineUserId);
 }
 
-function logHistory(lineUserId, vocabId, correct) {
-  const logHistory = db.prepare('insert into userHistory (lineUserId, vocabId, correct) values (?, ?, ?)');
-  logHistory.run(lineUserId, vocabId, correct);
+function correctAnswer(lineUserId) {
+  const correctAnswer = db.prepare('update user set currentCorrect = true, currentAnswered = true, score = score + 1 where lineUserId = ?');
+  const logHistory = db.prepare('insert into userHistory (lineUserId, vocabId, correct) values (?, (select currentVocabId from user where lineUserId = ?), true)');
+  
+  db.transaction(() => {
+    correctAnswer.run(lineUserId);
+    logHistory.run(lineUserId, lineUserId);
+  })();
 }
 
-function addScore(lineUserId) {
-  const addScore = db.prepare('update user set score = score + 1 where lineUserId = ?');
-  addScore.run(lineUserId);
+function wrongAnswer(lineUserId) {
+  const wrongAnswer = db.prepare('update user set currentCorrect = false, currentAnswered = true where lineUserId = ?');
+  const logHistory = db.prepare('insert into userHistory (lineUserId, vocabId, correct) values (?, (select currentVocabId from user where lineUserId = ?), false)');
+  
+  db.transaction(() => {
+    wrongAnswer.run(lineUserId);
+    logHistory.run(lineUserId, lineUserId);
+  })();
 }
 
-module.exports = { initDb, createUser, doesUserExist, deleteUser, assignRandomVocab, getCurrentVocab, logHistory, addScore };
+module.exports = { initDb, createUser, doesUserExist, deleteUser, assignRandomVocab, getCurrentVocab, correctAnswer, wrongAnswer};
