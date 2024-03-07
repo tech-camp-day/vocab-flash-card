@@ -17,6 +17,7 @@ function handleEvent(event) {
       break;
     default:
       break;
+  }
 }
 
 function handleFollow(event) {
