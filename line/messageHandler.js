@@ -1,4 +1,12 @@
 const { reply } = require('./messageSender');
+const {
+  createUser,
+  deleteUser,
+  assignRandomVocab,
+  getCurrentVocab,
+  addScore,
+  logHistory
+} = require('../data/db');
 
 /**
  * จัดการกับเหตุการณ์ที่เข้ามา
@@ -21,25 +29,43 @@ function handleEvent(event) {
 }
 
 function handleFollow(event) {
-  reply(event, 'สวัสดีครับ มาเล่นทายคำกันเถอะ! จะมีศัพท์ภาษาอังกฤษส่งให้ทุกวันตอน 6 โมงเย็น แต่ถ้าจะเล่นตอนนี้พิมพ์ว่า "ขอศัพท์" ได้เลยครับ');
-  // todo create user 
+  reply(event, `สวัสดีครับ มาเล่นทายคำกันเถอะ! 
+จะมีศัพท์ภาษาอังกฤษส่งให้ทุกวันตอน 6 โมงเย็น
+แต่ถ้าจะเล่นตอนนี้พิมพ์ว่า "ขอศัพท์" ได้เลยครับ`);
+  createUser(event.source.userId);
 }
 
 function handleUnfollow(event) {
-  console.log(JSON.stringify(event, null, 2));
-  // todo delete user and history
+  deleteUser(event.source.userId);
 }
 
 function handleMessage(event) {
   if (event.message.type !== 'text') {
-    reply('ส่งสติ้กเกอร์มาเพื่อ?');
+    reply(event, 'ส่งสติ้กเกอร์มาเพื่อ?');
   }
 
   if (event.message.text === 'ขอศัพท์') {
-    // todo send word
+    const { word } = assignRandomVocab(event.source.userId);
+    reply(event, `"${word}" แปลว่าอะไร?`);
   }
 
-  // todo check answer, tell user to wait for tommorow, update score
+  const currentVocab = getCurrentVocab(event.source.userId);
+
+  if (!currentVocab) {
+    reply(event, 'ยังไม่มีศัพท์ให้ทายครับ');
+    return;
+  }
+
+  if (event.message.text === meaning) {
+    reply(event, 'ถูกต้องครับ');
+    addScore(event.source.userId, 1);
+    logHistory(event.source.userId, vocabId, true);
+  } else {
+    reply(event, `ผิดครับ ${word} แปลว่า "${meaning}"`);
+    logHistory(event.source.userId, vocabId, false);
+  }
+
+  reply(event, 'รอศัพท์ใหม่พรุ่งนี้นะครับ');
 }
 
 module.exports = { handleEvent };
