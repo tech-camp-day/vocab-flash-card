@@ -3,14 +3,14 @@
   "setupTasks": [
     {
       "command": "npm i",
-      "name": "y"
+      "name": "Install packages"
     }
   ],
 
   // These tasks can be run from CodeSandbox. Running one will open a log in the app.
   "tasks": {
-    "n": {
-      "name": "n",
+    "start": {
+      "name": "Start project",
       "command": "npm start",
       "runAtStart": true
     }
