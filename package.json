@@ -4,7 +4,8 @@
     "description": "Let's get challenged by LINE bot with new vocaburary everyday",
     "main": "index.js",
     "scripts": {
-      "start": "nodemon index.js"
+      "dev": "nodemon src/index.js",
+      "start": "node src/index.js"
     },
     "author": "",
     "license": "ISC",
