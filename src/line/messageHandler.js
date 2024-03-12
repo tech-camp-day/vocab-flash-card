@@ -75,7 +75,7 @@ function handleMessage(event) {
   const currentVocab = getCurrentVocab(event.source.userId);
 
   if (!currentVocab) {
-    reply(event, 'ยังไม่มีศัพท์ให้ทายครับ');
+    reply(event, 'ยังไม่มีศัพท์ให้ทายครับ', 'ถ้าอยากเล่นตอนนี้พิมพ์ว่า "ขอศัพท์" ได้เลยครับ');
     return;
   }
 
