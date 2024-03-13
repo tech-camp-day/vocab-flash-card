@@ -38,9 +38,9 @@ const initDb = () => {
     createUserTable.run();
     createUserHistoryTable.run();
 
-    const insertVocab = db.prepare('insert into vocabs (word, meaning) values (?, ?)');
-    vocabs.forEach(vocab => {
-      insertVocab.run(vocab.word, vocab.meaning);
+    const insertVocab = db.prepare('insert or ignore into vocabs (id, word, meaning) values (?, ?, ?)');
+    vocabs.forEach(({ id, word, meaning }) => {
+      insertVocab.run(id, word, meaning);
     });
   });
 
