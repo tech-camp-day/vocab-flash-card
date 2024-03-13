@@ -1,5 +1,5 @@
 const db = require('better-sqlite3')('vocab-flash-card.db', { verbose: console.log });
-
+const vocabs = require("./vocabs.json");
 /**
  * กำหนดค่าเริ่มต้นให้ฐานข้อมูลโดยการสร้างตารางที่จำเป็นหากยังไม่มีอยู่
  */
@@ -37,6 +37,11 @@ const initDb = () => {
     createVocabTable.run();
     createUserTable.run();
     createUserHistoryTable.run();
+
+    const insertVocab = db.prepare('insert into vocabs (word, meaning) values (?, ?)');
+    vocabs.forEach(vocab => {
+      insertVocab.run(vocab.word, vocab.meaning);
+    });
   });
 
   createAllTables();
