@@ -22,6 +22,24 @@ spec:
             value: ${LINE_CHANNEL_ACCESS_TOKEN}
           - name: LINE_CHANNEL_SECRET
             value: ${LINE_CHANNEL_SECRET}
+        volumeMounts:
+          - name: vocab-flash-card-db
+            mountPath: /app/db
+      volumes:
+        - name: vocab-flash-card-db
+          persistentVolumeClaim:
+            claimName: vocab-flash-card-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vocab-flash-card-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
 ---
 apiVersion: v1
 kind: Service

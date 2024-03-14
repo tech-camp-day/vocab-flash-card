@@ -1,4 +1,4 @@
-const db = require('better-sqlite3')('vocab-flash-card.db', { verbose: console.log });
+const db = require('better-sqlite3')('./db/vocab-flash-card.db', { verbose: console.log });
 const vocabs = require("./vocabs.json");
 /**
  * กำหนดค่าเริ่มต้นให้ฐานข้อมูลโดยการสร้างตารางที่จำเป็นหากยังไม่มีอยู่
