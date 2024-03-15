@@ -7,6 +7,7 @@ const {
   getCurrentVocab,
   correctAnswer,
   wrongAnswer,
+  getWeeklyReport,
 } = require('../data/db');
 
 /**
@@ -70,6 +71,12 @@ function handleMessage(event) {
   if (event.message.text === 'ขอศัพท์') {
     const { word } = assignRandomVocab(event.source.userId);
     reply(event, `"${word}" แปลว่าอะไร?`);
+    return;
+  }
+
+  if (event.message.text === 'ดูคะแนน') {
+    const { total, correct } = getWeeklyReport(event.source.userId);
+    reply(event, `คุณตอบถูก ${correct}/${total} ครั้งใน 7 วันที่ผ่านมาครับ`);
     return;
   }
 

@@ -1,6 +1,10 @@
 const cron = require("node-cron");
 
-const { assignRandomVocab, getNoAnswerPendingUsers } = require("../data/db");
+const {
+  assignRandomVocab,
+  getNoAnswerPendingUsers,
+  getWeeklyReportAllUsers,
+} = require("../data/db");
 const { send } = require("./messageSender");
 
 /**
@@ -10,10 +14,29 @@ function sendNewVocabToUsersWithoutAnswerPending() {
   console.log("sendNewVocabToUsersWithoutAnswerPending started!");
   const noAnswerPendingUsers = getNoAnswerPendingUsers();
 
-  for (const user of noAnswerPendingUsers) {
-    const { word } = assignRandomVocab(user.lineUserId);
-    send(user.lineUserId, `"${word}" แปลว่าอะไร?`);
+  for (const { lineUserId } of noAnswerPendingUsers) {
+    const { word } = assignRandomVocab(lineUserId);
+    send(lineUserId, `"${word}" แปลว่าอะไร?`);
   }
 }
 
-cron.schedule("0 18 * * *", sendNewVocabToUsersWithoutAnswerPending, { timezone: "Asia/Bangkok" });
+cron.schedule("0 18 * * *", sendNewVocabToUsersWithoutAnswerPending, {
+  timezone: "Asia/Bangkok",
+});
+
+function sendWeeklyReport() {
+  console.log("sendWeeklyReport started!");
+  const report = getWeeklyReportAllUsers();
+
+  for (const { lineUserId, total, correct } of report) {
+    send(
+      lineUserId,
+      `สรุปคะแนนสัปดาห์ที่ผ่านมาของคุณ: ${correct}/${total} คะแนน`
+    );
+  }
+}
+
+// cron every Sunday at 10am
+cron.schedule("0 10 * * 0", sendWeeklyReport, {
+  timezone: "Asia/Bangkok",
+});

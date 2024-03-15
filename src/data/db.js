@@ -97,12 +97,15 @@ function deleteUser(lineUserId) {
  * @returns {object} - วัตถุคำศัพท์ที่กำหนดสุ่ม
  */
 function assignRandomVocab(lineUserId) {
-  const selectRandomVocab = db.prepare(
-    "select id, word, meaning from vocabs order by random() limit 1"
-  );
-  const updateCurrentVocab = db.prepare(
-    "update user set currentVocabId = ?, currentAnswered = false, currentCorrect = false where lineUserId = ?"
-  );
+  const selectRandomVocab = db.prepare(`
+    select id, word, meaning 
+    from vocabs 
+    order by random() 
+    limit 1`);
+  const updateCurrentVocab = db.prepare(`
+    update user 
+    set currentVocabId = ?, currentAnswered = false, currentCorrect = false 
+    where lineUserId = ?`);
 
   const randomVocab = selectRandomVocab.get();
   updateCurrentVocab.run(randomVocab.id, lineUserId);
@@ -115,9 +118,10 @@ function assignRandomVocab(lineUserId) {
  * @returns {Array} อาร์เรย์ของค่า lineUserId
  */
 function getNoAnswerPendingUsers() {
-  const selectNoAnswerPendingUsers = db.prepare(
-    "select lineUserId from user where currentAnswered = true or currentVocabId is null"
-  );
+  const selectNoAnswerPendingUsers = db.prepare(`
+    select lineUserId 
+    from user 
+    where currentAnswered = true or currentVocabId is null`);
   return selectNoAnswerPendingUsers.all();
 }
 
@@ -127,9 +131,10 @@ function getNoAnswerPendingUsers() {
  * @returns {object|null} - วัตถุคำศัพท์ปัจจุบันถ้าพบ มิฉะนั้นเป็นค่า null
  */
 function getCurrentVocab(lineUserId) {
-  const selectCurrentVocab = db.prepare(
-    "select word, meaning from vocabs where id = (select currentVocabId from user where lineUserId = ? and currentAnswered = false)"
-  );
+  const selectCurrentVocab = db.prepare(`
+    select word, meaning 
+    from vocabs 
+    where id = (select currentVocabId from user where lineUserId = ? and currentAnswered = false)`);
   return selectCurrentVocab.get(lineUserId);
 }
 
@@ -138,12 +143,13 @@ function getCurrentVocab(lineUserId) {
  * @param {string} lineUserId - ไอดีผู้ใช้ของ Line
  */
 function correctAnswer(lineUserId) {
-  const correctAnswer = db.prepare(
-    "update user set currentCorrect = true, currentAnswered = true, score = score + 1 where lineUserId = ?"
-  );
-  const logHistory = db.prepare(
-    "insert into userHistory (lineUserId, vocabId, correct) values (?, (select currentVocabId from user where lineUserId = ?), true)"
-  );
+  const correctAnswer = db.prepare(`
+    update user 
+    set currentCorrect = true, currentAnswered = true, score = score + 1 
+    where lineUserId = ?`);
+  const logHistory = db.prepare(`
+    insert into userHistory (lineUserId, vocabId, correct) 
+    values (?, (select currentVocabId from user where lineUserId = ?), true)`);
 
   db.transaction(() => {
     correctAnswer.run(lineUserId);
@@ -156,17 +162,48 @@ function correctAnswer(lineUserId) {
  * @param {string} lineUserId - ไอดีผู้ใช้ของ Line
  */
 function wrongAnswer(lineUserId) {
-  const wrongAnswer = db.prepare(
-    "update user set currentCorrect = false, currentAnswered = true where lineUserId = ?"
-  );
-  const logHistory = db.prepare(
-    "insert into userHistory (lineUserId, vocabId, correct) values (?, (select currentVocabId from user where lineUserId = ?), false)"
-  );
+  const wrongAnswer = db.prepare(`
+    update user 
+    set currentCorrect = false, currentAnswered = true 
+    where lineUserId = ?`);
+  const logHistory = db.prepare(`
+    insert into userHistory (lineUserId, vocabId, correct) 
+    values (?, (select currentVocabId from user where lineUserId = ?), false)`);
 
   db.transaction(() => {
     wrongAnswer.run(lineUserId);
     logHistory.run(lineUserId, lineUserId);
   })();
+}
+
+/**
+ * ดึงรายงานสัปดาห์สำหรับผู้ใช้งานที่ระบุ
+ *
+ * @param {string} lineUserId - ไอดีผู้ใช้งานของ Line
+ * @returns {Object} - วัตถุที่ประกอบด้วยจำนวนรวมและจำนวนที่ถูกต้องของรายการประวัติผู้ใช้สำหรับช่วง 7 วันที่ผ่านมา
+ */
+function getWeeklyReport(lineUserId) {
+  const selectWeeklyReport = db.prepare(`
+    select count(*) as total, sum(correct) as correct 
+    from userHistory 
+    where lineUserId = ? 
+      and createdDate >= datetime('now', '-7 days')`
+  );
+  return selectWeeklyReport.get(lineUserId);
+}
+
+/**
+ * ดึงรายงานสัปดาห์สำหรับผู้ใช้ทั้งหมด
+ * @returns {Array} อาร์เรย์ของวัตถุที่ประกอบด้วย lineUserId, จำนวนรวม, และจำนวนที่ถูกต้องสำหรับแต่ละผู้ใช้
+ */
+function getWeeklyReportAllUsers() {
+  const selectWeeklyReportAllUsers = db.prepare(`
+    select lineUserId, count(*) as total, sum(correct) as correct 
+    from userHistory 
+    where createdDate >= datetime('now', '-7 days') 
+    group by lineUserId`
+  );
+  return selectWeeklyReportAllUsers.all();
 }
 
 module.exports = {
@@ -179,4 +216,6 @@ module.exports = {
   correctAnswer,
   wrongAnswer,
   getNoAnswerPendingUsers,
+  getWeeklyReport,
+  getWeeklyReportAllUsers,
 };
