@@ -59,6 +59,7 @@ function handleUnfollow(event) {
 function handleMessage(event) {
   if (event.message.type !== 'text') {
     reply(event, 'ส่งสติ้กเกอร์มาเพื่อ?');
+    return;
   }
 
   if (!doesUserExist(event.source.userId)) {
