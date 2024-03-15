@@ -83,7 +83,7 @@ function handleMessage(event) {
   const currentVocab = getCurrentVocab(event.source.userId);
 
   if (!currentVocab) {
-    reply(event, 'ยังไม่มีศัพท์ให้ทายครับ', 'ถ้าอยากเล่นตอนนี้พิมพ์ว่า "ขอศัพท์" ได้เลยครับ');
+    reply(event, 'ยังไม่มีศัพท์ให้ทายครับ', 'ถ้าอยากเล่นตอนนี้พิมพ์ว่า "ขอศัพท์" หรือถ้าต้องการดูคะแนนพิมพ์ว่า "ดูคะแนน" ได้เลยครับ');
     return;
   }
 
@@ -97,7 +97,5 @@ function handleMessage(event) {
     wrongAnswer(event.source.userId);
   }
 }
-
-// todo: history check
 
 module.exports = { handleEvent };
