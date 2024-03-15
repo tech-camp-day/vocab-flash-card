@@ -88,11 +88,8 @@ function handleMessage(event) {
     reply(event, 'ผิดครับ', `${word} แปลว่า "${meaning}"`);
     wrongAnswer(event.source.userId);
   }
-
-  send(event, 'รอศัพท์ใหม่พรุ่งนี้นะครับ');
 }
 
-// todo: cron to assign new vocab everyday
 // todo: history check
 
 module.exports = { handleEvent };

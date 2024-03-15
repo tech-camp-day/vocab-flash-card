@@ -1,5 +1,8 @@
-const db = require('better-sqlite3')('./db/vocab-flash-card.db', { verbose: console.log });
+const db = require("better-sqlite3")("./db/vocab-flash-card.db", {
+  verbose: console.log,
+});
 const vocabs = require("./vocabs.json");
+
 /**
  * กำหนดค่าเริ่มต้นให้ฐานข้อมูลโดยการสร้างตารางที่จำเป็นหากยังไม่มีอยู่
  */
@@ -31,14 +34,16 @@ const initDb = () => {
         foreign key (lineUserId) references user(lineUserId),
         foreign key (vocabId) references vocabs(id)
       )
-    `)
+    `);
 
   const createAllTables = db.transaction(() => {
     createVocabTable.run();
     createUserTable.run();
     createUserHistoryTable.run();
 
-    const insertVocab = db.prepare('insert or ignore into vocabs (id, word, meaning) values (?, ?, ?)');
+    const insertVocab = db.prepare(
+      "insert or ignore into vocabs (id, word, meaning) values (?, ?, ?)"
+    );
     vocabs.forEach(({ id, word, meaning }) => {
       insertVocab.run(id, word, meaning);
     });
@@ -54,7 +59,7 @@ initDb();
  * @param {string} lineUserId - ไอดีผู้ใช้ของ Line
  */
 function createUser(lineUserId) {
-  const createUser = db.prepare('insert into user (lineUserId) values (?)');
+  const createUser = db.prepare("insert into user (lineUserId) values (?)");
   createUser.run(lineUserId);
 }
 
@@ -64,7 +69,9 @@ function createUser(lineUserId) {
  * @returns {object|null} - วัตถุผู้ใช้งานถ้าพบ มิฉะนั้นเป็นค่า null
  */
 function doesUserExist(lineUserId) {
-  const selectUser = db.prepare('select lineUserId from user where lineUserId = ?');
+  const selectUser = db.prepare(
+    "select lineUserId from user where lineUserId = ?"
+  );
   return selectUser.get(lineUserId);
 }
 
@@ -73,8 +80,10 @@ function doesUserExist(lineUserId) {
  * @param {string} lineUserId - ไอดีผู้ใช้ของ Line
  */
 function deleteUser(lineUserId) {
-  const deleteUserHistory = db.prepare('delete from userHistory where lineUserId = ?');
-  const deleteUser = db.prepare('delete from user where lineUserId = ?');
+  const deleteUserHistory = db.prepare(
+    "delete from userHistory where lineUserId = ?"
+  );
+  const deleteUser = db.prepare("delete from user where lineUserId = ?");
 
   db.transaction(() => {
     deleteUserHistory.run(lineUserId);
@@ -88,14 +97,28 @@ function deleteUser(lineUserId) {
  * @returns {object} - วัตถุคำศัพท์ที่กำหนดสุ่ม
  */
 function assignRandomVocab(lineUserId) {
-  const selectRandomVocab = db.prepare('select id, word, meaning from vocabs order by random() limit 1');
-  const updateCurrentVocab = db.prepare('update user set currentVocabId = ?, currentAnswered = false, currentCorrect = false where lineUserId = ?');
+  const selectRandomVocab = db.prepare(
+    "select id, word, meaning from vocabs order by random() limit 1"
+  );
+  const updateCurrentVocab = db.prepare(
+    "update user set currentVocabId = ?, currentAnswered = false, currentCorrect = false where lineUserId = ?"
+  );
 
   const randomVocab = selectRandomVocab.get();
-  console.log(randomVocab, null, 2);
   updateCurrentVocab.run(randomVocab.id, lineUserId);
 
   return randomVocab;
+}
+
+/**
+ * ดึง lineUserId ของผู้ใช้ที่ไม่มีคำตอบที่รอดำเนินการหรือไม่มี current vocabId
+ * @returns {Array} อาร์เรย์ของค่า lineUserId
+ */
+function getNoAnswerPendingUsers() {
+  const selectNoAnswerPendingUsers = db.prepare(
+    "select lineUserId from user where currentAnswered = true or currentVocabId is null"
+  );
+  return selectNoAnswerPendingUsers.all();
 }
 
 /**
@@ -104,7 +127,9 @@ function assignRandomVocab(lineUserId) {
  * @returns {object|null} - วัตถุคำศัพท์ปัจจุบันถ้าพบ มิฉะนั้นเป็นค่า null
  */
 function getCurrentVocab(lineUserId) {
-  const selectCurrentVocab = db.prepare('select word, meaning from vocabs where id = (select currentVocabId from user where lineUserId = ? and currentAnswered = false)');
+  const selectCurrentVocab = db.prepare(
+    "select word, meaning from vocabs where id = (select currentVocabId from user where lineUserId = ? and currentAnswered = false)"
+  );
   return selectCurrentVocab.get(lineUserId);
 }
 
@@ -113,9 +138,13 @@ function getCurrentVocab(lineUserId) {
  * @param {string} lineUserId - ไอดีผู้ใช้ของ Line
  */
 function correctAnswer(lineUserId) {
-  const correctAnswer = db.prepare('update user set currentCorrect = true, currentAnswered = true, score = score + 1 where lineUserId = ?');
-  const logHistory = db.prepare('insert into userHistory (lineUserId, vocabId, correct) values (?, (select currentVocabId from user where lineUserId = ?), true)');
-  
+  const correctAnswer = db.prepare(
+    "update user set currentCorrect = true, currentAnswered = true, score = score + 1 where lineUserId = ?"
+  );
+  const logHistory = db.prepare(
+    "insert into userHistory (lineUserId, vocabId, correct) values (?, (select currentVocabId from user where lineUserId = ?), true)"
+  );
+
   db.transaction(() => {
     correctAnswer.run(lineUserId);
     logHistory.run(lineUserId, lineUserId);
@@ -127,13 +156,27 @@ function correctAnswer(lineUserId) {
  * @param {string} lineUserId - ไอดีผู้ใช้ของ Line
  */
 function wrongAnswer(lineUserId) {
-  const wrongAnswer = db.prepare('update user set currentCorrect = false, currentAnswered = true where lineUserId = ?');
-  const logHistory = db.prepare('insert into userHistory (lineUserId, vocabId, correct) values (?, (select currentVocabId from user where lineUserId = ?), false)');
-  
+  const wrongAnswer = db.prepare(
+    "update user set currentCorrect = false, currentAnswered = true where lineUserId = ?"
+  );
+  const logHistory = db.prepare(
+    "insert into userHistory (lineUserId, vocabId, correct) values (?, (select currentVocabId from user where lineUserId = ?), false)"
+  );
+
   db.transaction(() => {
     wrongAnswer.run(lineUserId);
     logHistory.run(lineUserId, lineUserId);
   })();
 }
 
-module.exports = { initDb, createUser, doesUserExist, deleteUser, assignRandomVocab, getCurrentVocab, correctAnswer, wrongAnswer};
+module.exports = {
+  initDb,
+  createUser,
+  doesUserExist,
+  deleteUser,
+  assignRandomVocab,
+  getCurrentVocab,
+  correctAnswer,
+  wrongAnswer,
+  getNoAnswerPendingUsers,
+};

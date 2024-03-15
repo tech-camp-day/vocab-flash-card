@@ -20,12 +20,12 @@ function reply(event, ...messages) {
 /**
  * เริ่มส่งข้อความไปยังผู้ใช้
  * 
- * @param {Object} event - อ็อบเจ็กต์เหตุการณ์
+ * @param {string} lineUserId - user ID ของผู้ใช้
  * @param {string} messages - ข้อความที่จะส่ง
  */
-function send(event, ...messages) {
+function send(lineUserId, ...messages) {
   client.pushMessage({
-    to: event.source.userId,
+    to: lineUserId,
     messages: messages.map((message) => ({ type: 'text', text: message })),
   });
 }
