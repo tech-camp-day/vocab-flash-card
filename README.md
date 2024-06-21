@@ -18,3 +18,4 @@ CHANNEL_ACCESS_TOKEN=your_channel_access_token
 CHANNEL_SECRET=your_channel_secret
 ```
 4. เริ่มต้นแอปพลิเคชันโดยรัน `npm start` ในเทอร์มินอล
+
