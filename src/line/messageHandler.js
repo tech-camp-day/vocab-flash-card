@@ -9,24 +9,29 @@ const {
   wrongAnswer,
   getWeeklyReport,
 } = require('../data/db');
+const MESSAGE_LANG = require('./message');
 
 /**
  * จัดการกับเหตุการณ์ที่เข้ามา, ตรวจสอบประเภทของเหตุการณ์และส่งไปยังฟังก์ชันที่เหมาะสม
  * @param {object} event - อ็อบเจ็กต์เหตุการณ์
  */
-function handleEvent(event) {
-  switch (event.type) {
-    case 'follow':
-      handleFollow(event);
-      break;
-    case 'unfollow':
-      handleUnfollow(event);
-      break;
-    case 'message':
-      handleMessage(event);
-      break;
-    default:
-      break;
+function handleEvent(lang) {
+  const txt = MESSAGE_LANG[lang];
+
+  return (event) => {
+    switch (event.type) {
+      case 'follow':
+        handleFollow(event, txt, lang);
+        break;
+      case 'unfollow':
+        handleUnfollow(event);
+        break;
+      case 'message':
+        handleMessage(event, txt, lang);
+        break;
+      default:
+        break;
+    }
   }
 }
 
@@ -34,11 +39,9 @@ function handleEvent(event) {
  * จัดการกับเหตุการณ์ 'follow' ส่งข้อความทักทายและสร้างผู้ใช้ในฐานข้อมูล
  * @param {object} event - อ็อบเจ็กต์เหตุการณ์
  */
-function handleFollow(event) {
-  reply(event, `สวัสดีครับ มาเล่นทายคำกันเถอะ! 
-จะมีศัพท์ภาษาอังกฤษส่งให้ทุกวันตอน 6 โมงเย็น
-แต่ถ้าจะเล่นตอนนี้พิมพ์ว่า "ขอศัพท์" ได้เลยครับ`);
-  createUser(event.source.userId);
+function handleFollow(event, txt, lang) {
+  reply(event, txt.HELLO);
+  createUser(event.source.userId, lang);
 }
 
 /**
@@ -57,43 +60,47 @@ function handleUnfollow(event) {
  * หากผู้ใช้ตอบคำศัพท์ ตรวจสอบว่าคำตอบถูกหรือไม่ และตอบกลับด้วยข้อความ
  * @param {object} event - อ็อบเจ็กต์เหตุการณ์
  */
-function handleMessage(event) {
+function handleMessage(event, txt, lang) {
   if (event.message.type !== 'text') {
-    reply(event, 'ส่งสติ้กเกอร์มาเพื่อ?');
+    reply(event, txt.NOT_TEXT);
     return;
   }
 
   if (!doesUserExist(event.source.userId)) {
-    reply(event, 'มีข้อผิดพลาดในการเริ่มต้น กรุณาลอง block แล้ว unblock บอทใหม่อีกครั้ง');
+    reply(event, txt.START_ERROR);
     return;
   }
 
-  if (event.message.text === 'ขอศัพท์') {
-    const { word } = assignRandomVocab(event.source.userId);
-    reply(event, `"${word}" แปลว่าอะไร?`);
+  if (event.message.text === txt.GIVE_WORD) {
+    const { word, meaning } = assignRandomVocab(event.source.userId);
+    const question = lang === 'th' ? word : meaning;
+    reply(event, txt.ASK_WORD.replace('{question}', question));
     return;
   }
 
-  if (event.message.text === 'ดูคะแนน') {
+  if (event.message.text === txt.SEE_SCORE) {
     const { total, correct } = getWeeklyReport(event.source.userId);
-    reply(event, `คุณตอบถูก ${correct}/${total} ครั้งใน 7 วันที่ผ่านมาครับ`);
+    reply(event, txt.STAT.replace('{correct}', correct).replace('{total}', total));
     return;
   }
 
   const currentVocab = getCurrentVocab(event.source.userId);
 
   if (!currentVocab) {
-    reply(event, 'ยังไม่มีศัพท์ให้ทายครับ', 'ถ้าอยากเล่นตอนนี้พิมพ์ว่า "ขอศัพท์" หรือถ้าต้องการดูคะแนนพิมพ์ว่า "ดูคะแนน" ได้เลยครับ');
+    reply(event, txt.NO_ASSIGNED_WORD, txt.HELP);
     return;
   }
 
   const { word, meaning } = currentVocab;
 
-  if (event.message.text === meaning) {
-    reply(event, 'ถูกต้องครับ');
+  const question = lang === 'th' ? word : meaning;
+  const answer = lang === 'th' ? meaning : word;
+
+  if (event.message.text === answer) {
+    reply(event, txt.correct);
     correctAnswer(event.source.userId);
   } else {
-    reply(event, 'ผิดครับ', `${word} แปลว่า "${meaning}"`);
+    reply(event, txt.WRONG, txt.SHOW_ANSWER.replace('{question}', question).replace('{answer}', answer));
     wrongAnswer(event.source.userId);
   }
 }

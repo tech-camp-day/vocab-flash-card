@@ -47,6 +47,15 @@ jobs:
           LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
           LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
           DOMAIN: ${{ secrets.DOMAIN }}
+          BOT_LANG: th
+
+      - name: Substitute variables in deployment.yml [EN]
+        run: envsubst < .deployment/k8s.yml.template > .deployment/k8s-en.yml
+        env:
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN_EN }}
+          LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET_EN }}
+          DOMAIN: ${{ secrets.DOMAIN_EN }}
+          BOT_LANG: en
 
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
@@ -57,4 +66,6 @@ jobs:
         run: doctl kubernetes cluster kubeconfig save ${{ secrets.DIGITALOCEAN_CLUSTER }}
 
       - name: Deploy to DigitalOcean Kubernetes
-        run: kubectl apply -f .deployment/k8s.yml -n ${{ secrets.DIGITALOCEAN_NAMESPACE }}
+        run: |
+          kubectl apply -f .deployment/k8s.yml -n ${{ secrets.DIGITALOCEAN_NAMESPACE }}
+          kubectl apply -f .deployment/k8s-en.yml -n ${{ secrets.DIGITALOCEAN_NAMESPACE }}

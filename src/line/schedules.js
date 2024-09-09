@@ -6,6 +6,7 @@ const {
   getWeeklyReportAllUsers,
 } = require("../data/db");
 const { send } = require("./messageSender");
+const MESSAGE_LANG = require("./message");
 
 /**
  * ส่งคำศัพท์ใหม่ให้กับผู้ใช้ที่ไม่มีคำศัพท์ค้างตอบอยู่
@@ -14,9 +15,11 @@ function sendNewVocabToUsersWithoutAnswerPending() {
   console.log("sendNewVocabToUsersWithoutAnswerPending started!");
   const noAnswerPendingUsers = getNoAnswerPendingUsers();
 
-  for (const { lineUserId } of noAnswerPendingUsers) {
-    const { word } = assignRandomVocab(lineUserId);
-    send(lineUserId, `"${word}" แปลว่าอะไร?`);
+  for (const { lineUserId, lang } of noAnswerPendingUsers) {
+    const { word, meaning } = assignRandomVocab(lineUserId);
+    const txt = MESSAGE_LANG[lang];
+    const question = lang === "th" ? word : meaning;
+    send(lineUserId, txt.ASK_WORD.replace("{question}", question));
   }
 }
 
@@ -28,10 +31,11 @@ function sendWeeklyReport() {
   console.log("sendWeeklyReport started!");
   const report = getWeeklyReportAllUsers();
 
-  for (const { lineUserId, total, correct } of report) {
+  for (const { lineUserId, lang, total, correct } of report) {
+    const txt = MESSAGE_LANG[lang];
     send(
       lineUserId,
-      `สรุปคะแนนสัปดาห์ที่ผ่านมาของคุณ: ${correct}/${total} คะแนน`
+      txt.REPORT.replace("{correct}", correct).replace("{total}", total)
     );
   }
 }

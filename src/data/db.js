@@ -21,6 +21,7 @@ const initDb = () => {
         currentVocabId integer,
         currentAnswered boolean default false,
         currentCorrect boolean default false,
+        lang varchar(2),
         score integer default 0
       )
     `);
@@ -58,9 +59,9 @@ initDb();
  * สร้างผู้ใช้ใหม่ในฐานข้อมูล
  * @param {string} lineUserId - ไอดีผู้ใช้ของ Line
  */
-function createUser(lineUserId) {
-  const createUser = db.prepare("insert into user (lineUserId) values (?)");
-  createUser.run(lineUserId);
+function createUser(lineUserId, lang) {
+  const createUser = db.prepare("insert into user (lineUserId, lang) values (?, ?)");
+  createUser.run(lineUserId, lang);
 }
 
 /**
@@ -119,7 +120,7 @@ function assignRandomVocab(lineUserId) {
  */
 function getNoAnswerPendingUsers() {
   const selectNoAnswerPendingUsers = db.prepare(`
-    select lineUserId 
+    select lineUserId, lang
     from user 
     where currentAnswered = true or currentVocabId is null`);
   return selectNoAnswerPendingUsers.all();
@@ -198,10 +199,10 @@ function getWeeklyReport(lineUserId) {
  */
 function getWeeklyReportAllUsers() {
   const selectWeeklyReportAllUsers = db.prepare(`
-    select lineUserId, count(*) as total, sum(correct) as correct 
+    select lineUserId, lang, count(*) as total, sum(correct) as correct 
     from userHistory 
     where createdDate >= datetime('now', '-7 days') 
-    group by lineUserId`
+    group by lineUserId, lang`
   );
   return selectWeeklyReportAllUsers.all();
 }
