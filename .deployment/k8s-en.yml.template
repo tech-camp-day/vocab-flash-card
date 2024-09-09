@@ -22,6 +22,8 @@ spec:
             value: ${LINE_CHANNEL_ACCESS_TOKEN}
           - name: LINE_CHANNEL_SECRET
             value: ${LINE_CHANNEL_SECRET}
+          - name: BOT_LANG
+            value: ${BOT_LANG}
         volumeMounts:
           - name: vocab-flash-card-en-db
             mountPath: /app/db
