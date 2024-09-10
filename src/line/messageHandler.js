@@ -97,7 +97,7 @@ function handleMessage(event, txt, lang) {
   const answer = lang === 'th' ? meaning : word;
 
   if (event.message.text.toLowerCase() === answer.toLowerCase()) {
-    reply(event, txt.correct);
+    reply(event, txt.CORRECT);
     correctAnswer(event.source.userId);
   } else {
     reply(event, txt.WRONG, txt.SHOW_ANSWER.replace('{question}', question).replace('{answer}', answer));
