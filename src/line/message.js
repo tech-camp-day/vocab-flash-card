@@ -18,7 +18,7 @@ const MESSAGE_LANG = {
   },
   en: {
     HELLO: `Hello, let's play a word guessing game!
-You will receive an Thai word every day at 6 PM.
+You will receive a Thai word every day at 6 PM.
 But if you want to play now, type "Give me a word"`,
     NOT_TEXT: 'Why send a sticker?',
     START_ERROR: 'There was an error starting. Please try blocking and unblocking me again',
