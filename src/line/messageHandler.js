@@ -71,14 +71,14 @@ function handleMessage(event, txt, lang) {
     return;
   }
 
-  if (event.message.text === txt.GIVE_WORD) {
+  if (event.message.text.toLowerCase() === txt.GIVE_WORD.toLowerCase()) {
     const { word, meaning } = assignRandomVocab(event.source.userId);
     const question = lang === 'th' ? word : meaning;
     reply(event, txt.ASK_WORD.replace('{question}', question));
     return;
   }
 
-  if (event.message.text === txt.SEE_SCORE) {
+  if (event.message.text.toLowerCase() === txt.SEE_SCORE.toLowerCase()) {
     const { total, correct } = getWeeklyReport(event.source.userId);
     reply(event, txt.STAT.replace('{correct}', correct).replace('{total}', total));
     return;
@@ -96,7 +96,7 @@ function handleMessage(event, txt, lang) {
   const question = lang === 'th' ? word : meaning;
   const answer = lang === 'th' ? meaning : word;
 
-  if (event.message.text === answer) {
+  if (event.message.text.toLowerCase() === answer.toLowerCase()) {
     reply(event, txt.correct);
     correctAnswer(event.source.userId);
   } else {
